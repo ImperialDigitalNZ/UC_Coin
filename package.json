@@ -1,17 +1,26 @@
 {
-  "name": "uccoin",
+  "name": "uc_coin",
   "version": "1.0.0",
   "description": "",
   "main": "truffle.js",
   "directories": {
     "test": "test"
   },
+  "dependencies": {
+    "solc": "^0.4.19"
+  },
+  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ImperialDigitalNZ/UC_Coin.git"
+  },
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "solc": "^0.4.19"
-  }
+  "bugs": {
+    "url": "https://github.com/ImperialDigitalNZ/UC_Coin/issues"
+  },
+  "homepage": "https://github.com/ImperialDigitalNZ/UC_Coin#readme"
 }
