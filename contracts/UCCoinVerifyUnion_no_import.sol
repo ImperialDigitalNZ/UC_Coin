@@ -203,7 +203,7 @@ contract UCCoin is StandardToken, Ownable {
         return totalSupply.div(10 ** uint256(decimals));
     }
 
-    function UCCoin() {
+    function UCCoin() public {
         totalSupply = INITIAL_TOKEN_SUPPLY;
         balances[msg.sender] = totalSupply;
     }
@@ -227,7 +227,7 @@ contract UCCoinSales is UCCoin {
     event UCCoinSaleIsOn(uint256 updated);
     event UCCoinSaleIsOff(uint256 updated);
 
-    function UCCoinSales() {
+    function UCCoinSales() public {
 
     }
     // users can buy UC Coin
