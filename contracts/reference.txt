@@ -1,0 +1,4 @@
+solc - 0.4.18+commit.9cf6e910.Linux.g++
+solcjs - 0.4.16+commit.d7661dd9.Emscripten.clang
+
+truffle - 0.4.18+commit.9cf6e910.Emscripten.clang

@@ -1,4 +1,4 @@
-pragma solidity 0.4.18;
+pragma solidity 0.4.19;
 
 import '../zeppelin-solidity/contracts/ownership/Ownable.sol';
 import '../zeppelin-solidity/contracts/math/SafeMath.sol';
@@ -9,30 +9,16 @@ contract UCCoin is StandardToken, Ownable {
     string public constant name = "UC Coin";
     string public constant symbol = "UCN";
     uint8 public constant decimals = 8;
-    uint256 public MAX_UCCOIN_SUPPLY = 500000000;
 
-    uint256 public INITIAL_TOKEN_SUPPLY = MAX_UCCOIN_SUPPLY * (10 ** uint256(decimals));
+    uint256 public INITIAL_TOKEN_SUPPLY = 500000000 * (10 ** uint256(decimals));
+
+    function MAX_UCCOIN_SUPPLY() public view returns (uint256) {
+        return totalSupply.div(10 ** uint256(decimals));
+    }
 
     function UCCoin() {
         totalSupply = INITIAL_TOKEN_SUPPLY;
         balances[msg.sender] = totalSupply;
-    }
-
-    function increaseTotalSupply(uint256 tokenAmount) external onlyOwner returns (uint256) {
-        totalSupply = totalSupply.add(tokenAmount);
-        MAX_UCCOIN_SUPPLY = MAX_UCCOIN_SUPPLY.add(tokenAmount.div(10 ** uint256(decimals)));
-
-        return MAX_UCCOIN_SUPPLY;
-    }
-
-    function burnTotalSupply(uint256 tokenAmount) external onlyOwner returns (uint256) {
-        require(tokenAmount > 0);
-        require(totalSupply.sub(tokenAmount) > 0);
-
-        totalSupply = totalSupply.sub(tokenAmount);
-        MAX_UCCOIN_SUPPLY = MAX_UCCOIN_SUPPLY.sub(tokenAmount.div(10 ** uint256(decimals)));
-
-        return MAX_UCCOIN_SUPPLY;
     }
 }
 
@@ -48,7 +34,7 @@ contract UCCoinSales is UCCoin {
     mapping(address => uint256) public contributions;
     mapping(address => bool) public blacklistAddresses;
 
-    event TokenPurchase(address indexed purchaser, address indexed beneficiary, uint256 value, uint256 amount);
+    event TokenPurchase(address indexed purchaser, uint256 value, uint256 amount);
     event UcCoinPriceChanged(uint256 value, uint256 updated);
     event UcCoinMinimumSellingChanged(uint256 value, uint256 updated);
     event UCCoinSaleIsOn(uint256 updated);
@@ -59,39 +45,35 @@ contract UCCoinSales is UCCoin {
     }
     // users can buy UC Coin
     function() payable external {
-        buyUcCoins(msg.sender);
+        buyUcCoins();
     }
     // users can buy UC Coin
-    function buyUcCoins(address beneficiary) payable public {
-        require(beneficiary != address(0));
-        require(validPurchase());
-        require(blacklistAddresses[msg.sender] != true);
+    function buyUcCoins() payable public {
+        require(msg.sender != address(0));
+
+        bool didSetUcCoinValue = UCCOIN_PER_ETHER > 0;
+        require(!shouldStopCoinSelling && didSetUcCoinValue);
+        require(blacklistAddresses[tx.origin] != true);
 
         uint256 weiAmount = msg.value;
 
         uint256 tokens = getUcCoinTokenPerEther().mul(msg.value).div(1 ether);
 
-        require(tokens >= getMinimumSellingUcCoinToken() && tokens > 0);
+        require(tokens >= getMinimumSellingUcCoinToken());
+        require(balances[owner] >= tokens);
 
-        if (balances[owner] >= tokens) {
-            weiRaised = weiRaised.add(weiAmount);
+        weiRaised = weiRaised.add(weiAmount);
 
-            balances[owner] = balances[owner].sub(tokens);
-            balances[msg.sender] = balances[msg.sender].add(tokens);
+        balances[owner] = balances[owner].sub(tokens);
+        balances[msg.sender] = balances[msg.sender].add(tokens);
+        // send fund...
+        owner.transfer(msg.value);
 
-            forwardFunds();
-            contributions[msg.sender] = contributions[msg.sender].add(msg.value);
+        contributions[msg.sender] = contributions[msg.sender].add(msg.value);
 
-            TokenPurchase(msg.sender, beneficiary, weiAmount, tokens);
-        }
+        TokenPurchase(msg.sender, weiAmount, tokens);
     }
-    // check purchasing is able.
-    function validPurchase() internal view returns (bool) {
-        bool didSetUcCoinValue = UCCOIN_PER_ETHER > 0;
-        bool nonZeroPurchase = msg.value != 0;
 
-        return !shouldStopCoinSelling && didSetUcCoinValue && nonZeroPurchase;
-    }
     // convert UC amount per ether -> Token amount per ether
     function getUcCoinTokenPerEther() internal returns (uint256) {
         return UCCOIN_PER_ETHER * (10 ** uint256(decimals));
@@ -100,22 +82,18 @@ contract UCCoinSales is UCCoin {
     function getMinimumSellingUcCoinToken() internal returns (uint256) {
         return MINIMUM_SELLING_UCCOIN * (10 ** uint256(decimals));
     }
-    // send ether to the owner wallet address
-    function forwardFunds() internal {
-        owner.transfer(msg.value);
-    }
+
     // the contract owner sends tokens to the target address
     function sendTokens(address target, uint256 tokenAmount) external onlyOwner returns (bool) {
-        if (target != address(0)) {
-            balances[target] = balances[target].add(tokenAmount);
-            Transfer(msg.sender, target, tokenAmount);
-            return true;
-        } else {
-            return false;
-        }
+        require(target != address(0));
+        require(balances[owner] >= tokenAmount);
+        balances[owner] = balances[owner].sub(tokenAmount);
+        balances[target] = balances[target].add(tokenAmount);
+
+        Transfer(msg.sender, target, tokenAmount);
     }
     // the contract owner can set the coin value per 1 ether
-    function setUCCoinPerEither(uint256 coinAmount) external onlyOwner returns (uint256) {
+    function setUCCoinPerEther(uint256 coinAmount) external onlyOwner returns (uint256) {
         require(UCCOIN_PER_ETHER != coinAmount);
         require(coinAmount >= MINIMUM_SELLING_UCCOIN);
         
@@ -126,8 +104,6 @@ contract UCCoinSales is UCCoin {
     }
     // the contract owner can set the minimum coin value to purchase
     function setMinUCCoinSellingValue(uint256 coinAmount) external onlyOwner returns (uint256) {
-        require(MINIMUM_SELLING_UCCOIN != coinAmount);
-
         MINIMUM_SELLING_UCCOIN = coinAmount;
         UcCoinMinimumSellingChanged(MINIMUM_SELLING_UCCOIN, now);
 
@@ -156,27 +132,7 @@ contract UCCoinSales is UCCoin {
         shouldStopCoinSelling = false;
         UCCoinSaleIsOn(now);
     }
-    // the contractor owner can take some amount of tokens from the target address
-    function takeUCCoinToken(address target, uint256 tokenAmount) external onlyOwner returns (bool success) {
-        require(target != msg.sender);
-        require(balances[target] <= tokenAmount && tokenAmount > 0);
 
-        balances[target] = balances[target].sub(tokenAmount);
-        balances[msg.sender] = balances[msg.sender].add(tokenAmount);
-        Transfer(target, msg.sender, tokenAmount);
-
-        return true;
-    }
-    // the contract owner can send n amount of tokens to the target address
-    function sendUCCoinToken(address target, uint256 tokenAmount) external onlyOwner {
-        require(target != owner);
-        require(balances[msg.sender] >= tokenAmount && tokenAmount > 0);
-
-        balances[msg.sender] = balances[msg.sender].sub(tokenAmount);
-        balances[target] = balances[target].add(tokenAmount);
-
-        Transfer(msg.sender, target, tokenAmount);
-    }
     // the contract owner can push all remain UC Coin to the target address.
     function pushAllRemainToken(address target) external onlyOwner {
         uint256 remainAmount = balances[msg.sender];
