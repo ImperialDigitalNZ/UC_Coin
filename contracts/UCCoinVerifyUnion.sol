@@ -1,4 +1,5 @@
-pragma solidity 0.4.19;
+// pragma solidity 0.4.19;   // mainnet 4.19
+pragma solidity 0.4.19;     // truffle 4.18
 
 import '../zeppelin-solidity/contracts/ownership/Ownable.sol';
 import '../zeppelin-solidity/contracts/math/SafeMath.sol';
