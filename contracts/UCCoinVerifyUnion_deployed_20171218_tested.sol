@@ -1,4 +1,5 @@
-pragma solidity 0.4.19;
+pragma solidity 0.4.19;   // mainnet must be 4.19
+// pragma solidity 0.4.18;  // truffle test
 
 
 library SafeMath {

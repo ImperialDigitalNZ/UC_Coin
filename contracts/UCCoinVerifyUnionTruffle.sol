@@ -7,8 +7,8 @@ import '../zeppelin-solidity/contracts/token/StandardToken.sol';
 
 contract UCCoin is StandardToken, Ownable {
 
-    string public constant name = "UC Coin";
-    string public constant symbol = "UCN";
+    string public constant name = "DOGE COIN";
+    string public constant symbol = "DGE";
     uint8 public constant decimals = 8;
 
     uint256 public INITIAL_TOKEN_SUPPLY = 500000000 * (10 ** uint256(decimals));
@@ -23,7 +23,7 @@ contract UCCoin is StandardToken, Ownable {
     }
 }
 
-contract UCCoinSales is UCCoin {
+contract UCCoinVerifyUnionTruffle is UCCoin {
 
     uint256 public weiRaised;
 
@@ -41,7 +41,7 @@ contract UCCoinSales is UCCoin {
     event UCCoinSaleIsOn(uint256 updated);
     event UCCoinSaleIsOff(uint256 updated);
 
-    function UCCoinSales() {
+    function UCCoinVerifyUnionTruffle() {
 
     }
     // users can buy UC Coin

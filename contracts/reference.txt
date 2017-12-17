@@ -1,4 +1,29 @@
 solc - 0.4.18+commit.9cf6e910.Linux.g++
 solcjs - 0.4.16+commit.d7661dd9.Emscripten.clang
-
 truffle - 0.4.18+commit.9cf6e910.Emscripten.clang
+
+### Truffle
+# 0. Get Deployed contract Instance
+doge = UCCoinVerifyUnionTruffle.deployed()
+#1. Get Variables
+symbol = doge.then(function(instance){return instance.symbol.call()})
+name = doge.then(function(instance){return instance.name.call()})
+decimals = doge.then(function(instance){return instance.decimals.call()})
+INITIAL_TOKEN_SUPPLY = ?????
+MAX_UCCOIN_SUPPLY = doge.then(function(instance){return instance.MAX_UCCOIN_SUPPLY.call()})
+weiRaised = doge.then(function(instance){return instance.weiRaised.call()})
+UCCOIN_PER_ETHER = ?????
+shouldStopCoinSelling = doge.then(function(instance){return instance.shouldStopCoinSelling.call()})
+
+# ABI, Address
+JSON.stringify(UCCoinVerifyUnionTruffle.abi)
+UCCoinVerifyUnionTruffle.address
+
+# Use Functions
+setContinueSelling = doge.then(instance=>instance.setContinueSelling())
+buyUcCoins = doge.then(instance=>instance.sendTransaction({from:web3.eth.accounts[1], value:web3.toWei(1, 'ether')}))
+balanceOf = doge.then(instance=>instance.balanceOf.call('0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef'))
+sendTokens = doge.then(instance=>instance.sendTokens('0xf17f52151EbEF6C7334FAD080c5704D77216b732', 50000000000))
+
+### Web3.js
+
